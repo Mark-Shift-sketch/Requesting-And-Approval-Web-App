@@ -1,0 +1,130 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: sans-serif;
+}
+body {
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #F0F9FF;
+}
+.container {
+    width: 350px;
+    padding: 30px;
+    border: 3px solid;
+    border-image: linear-gradient(90deg, #2563EB, #22D3EE) 1;
+    background-color: white;
+}
+.container h1 {
+    text-align: center;
+    margin-bottom: 30px;
+}
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+input {
+    padding: 12px;
+    font-size: 16px;
+}
+button {
+    padding: 12px;
+    font-size: 16px;
+    cursor: pointer;
+}
+.signuplogo{
+    color: black;
+}
+.signup {
+    background: linear-gradient(90deg, #2563EB, #22D3EE);
+    color: white;
+    border: none;
+    border-radius: 30px;
+    font-weight: bold;
+}
+.signup:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+.go {
+    background: none;
+    border: none;
+    color: blue;
+    cursor: pointer;
+    font-weight: bold;
+}
+.overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: none;
+    justify-content: center;
+    align-items: center;
+}
+.confirmation-modal {
+    background: white;
+    padding: 30px;
+    width: 400px;
+    border-radius: 10px;
+    text-align: center;
+}
+.otpE {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin: 20px 0;
+}
+.Eotp {
+    width: 40px;
+    height: 45px;
+    text-align: center;
+    font-size: 18px;
+}
+
+.dept {
+    width: 100%;
+    max-width: 320px;
+    padding: 12px 14px;
+    font-size: 15px;
+    color: #333;
+    background-color: #fff;
+    border: 1.5px solid #ccc;
+    border-radius: 8px;
+    outline: none;
+    cursor: pointer;
+
+    /* remove default arrow */
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+
+    /* custom arrow */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24'%3E%3Cpath fill='%23666' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    background-size: 14px;
+}
+
+/* Hover */
+.dept:hover {
+    border-color: #888;
+}
+
+/* Focus */
+.dept:focus {
+    border-color: #4f46e5; 
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+}
+
+/* Disabled option */
+.dept option[value=""] {
+    color: #999;
+}
+
+
+
+

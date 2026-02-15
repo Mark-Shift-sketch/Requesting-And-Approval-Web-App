@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finance Dashboard</title>
+    <link rel="stylesheet" href="/static/admin.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <i class="fa-solid fa-building-columns" style="color: white; font-size: 1.125rem;"></i>
+            <h1 class="logo-text">Finance</h1>
+        </div>
+
+        <nav class="sidebar-nav custom-scrollbar">
+            <a id="nav-dashboard" class="nav-item active" onclick="switchView('dashboard')">
+                <div class="nav-item-content">
+                    <i class="fa-solid fa-border-all"></i>
+                    <span>Dashboard</span>
+                </div>
+            </a>
+            
+            <a id="nav-notifications" class="nav-item" onclick="switchView('notifications')">
+                <div class="nav-item-content">
+                    <i class="fa-regular fa-bell"></i>
+                    <span>Notifications</span>
+                </div>
+            </a>
+
+            <a id="nav-requests" class="nav-item" onclick="switchView('requests')">
+                <div class="nav-item-content">
+                    <i class="fa-solid fa-file-invoice-dollar"></i>
+                    <span style="line-height: 1.2;">Request Type<br>Management</span>
+                </div>
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <a href="/logout" class="logout-link">
+                <i class="fa-solid fa-arrow-right-from-bracket" style="margin-right: 12px;"></i>
+                <span>Logout</span>
+            </a>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        
+        <div id="view-dashboard" class="view-section">
+            <header class="top-header">
+                <div class="header-title">
+                    <h2>Dashboard</h2>
+                    <p>Welcome back, Admin</p>
+                </div>
+                
+                <div class="header-actions">
+                    <div class="date-widget">
+                        <i class="fa-regular fa-calendar" style="margin-right: 8px;"></i>
+                        <span class="current-date-display"></span>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-scroll custom-scrollbar">
+                <div class="stats-grid">
+                    <div class="stat-card card-blue">
+                        <div class="stat-header">
+                            <div class="icon-box"><i class="fa-regular fa-calendar-check"></i></div>
+                        </div>
+                        <div>
+                            <h3 class="stat-value">{{ approvals_today }}</h3>
+                            <p class="stat-label">Approvals Today</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card card-yellow">
+                        <div class="stat-header">
+                            <div class="icon-box"><i class="fa-regular fa-clock"></i></div>
+                        </div>
+                        <div>
+                            <h3 class="stat-value">{{ pending_count }}</h3>
+                            <p class="stat-label">Pending Approvals</p>
+                        </div>
+                    </div>
+
+                    <div class="stat-card card-green">
+                        <div class="stat-header">
+                            <div class="icon-box"><i class="fa-solid fa-check"></i></div>
+                        </div>
+                        <div>
+                            <h3 class="stat-value">{{ approved_count }}</h3>
+                            <p class="stat-label">Total Approved</p>
+                        </div>
+                    </div>
+
+                    <div class="stat-card card-red">
+                        <div class="stat-header">
+                            <div class="icon-box"><i class="fa-solid fa-xmark"></i></div>
+                        </div>
+                        <div>
+                            <h3 class="stat-value">{{ rejected_count }}</h3>
+                            <p class="stat-label">Total Rejected</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-container">
+                    <div class="table-header">
+                        <div class="table-title">
+                            <h3>All Requests</h3>
+                            <span class="count-badge" id="table-count-badge">{{ recent_requests|length }}</span>
+                        </div>
+                        
+                        <div class="table-actions">
+                            <div class="search-box">
+                                <i class="fa-solid fa-search"></i>
+                                <input type="text" id="search-input" placeholder="Search requests..." class="search-input" onkeyup="filterTable()">
+                            </div>
+                            <select id="status-filter" class="filter-select" onchange="filterTable()">
+                                <option value="">All Status</option>
+                                <option value="Pending">Pending</option>
+                                <option value="Approved">Approved</option>
+                                <option value="Rejected">Rejected</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Request ID</th>
+                                    <th>Email</th> 
+                                    <th>Department</th>
+                                    <th>Request Type</th>
+                                    <th>Attachment</th>
+                                    <th>Status</th>
+                                    <th class="text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="requests-table-body">
+                                {% if recent_requests %}
+                                    {% for req in recent_requests %}
+                                    <tr class="request-row" data-status="{{ req.status_name }}">
+                                        <td>#{{ req.request_id }}</td>
+                                        <td>
+                                            <div class="user-info-cell">
+                                                <span class="user-email">{{ req.email }}</span>
+                                            </div>
+                                        </td>
+                                        <td>{{ req.dept_name }}</td>
+                                        <td><span class="type-badge">{{ req.type_name }}</span></td>
+                                        <td>
+                                            {% if req.filename %}
+                                                <a href="/uploads/{{ req.filename }}" target="_blank" class="file-link">
+                                                    <i class="fa-solid fa-paperclip"></i> {{ req.filename }}
+                                                </a>
+                                            {% else %}
+                                                <span class="text-muted">No file</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="status-badge status-{{ req.status_name|lower }}">{{ req.status_name }}</span>
+                                        </td>
+                                        <td class="text-right">
+                                            {% if req.status_name == 'PENDING' %}
+                                                <div class="action-group">
+                                                    <button class="btn-icon btn-approve" title="Approve" onclick="updateStatus('{{ req.request_id }}', 'approved')">
+                                                        <i class="fa-solid fa-check"></i>
+                                                    </button>
+                                                    <button class="btn-icon btn-reject" title="Reject" onclick="rejectRequest('{{ req.request_id }}')">
+                                                        <i class="fa-solid fa-xmark"></i>
+                                                    </button>
+                                                </div>
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="7" style="text-align:center; color:#6b7280; padding:20px;">
+                                            No recent requests found.
+                                        </td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-requests" class="view-section" style="display: none;">
+            <header class="top-header">
+                <div class="header-title">
+                    <h2>Request Type Management</h2>
+                </div>
+                <div class="header-actions">
+                    <div class="date-widget">
+                        <i class="fa-regular fa-calendar" style="margin-right: 8px;"></i>
+                        <span class="current-date-display"></span>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-scroll custom-scrollbar">
+                
+                <div class="card-container form-section">
+                    <div class="section-header">
+                        <i class="fa-regular fa-circle-check header-icon" style="font-size: 1.25rem; color: #2563eb;"></i>
+                        <h3>Add Request Type</h3>
+                    </div>
+
+                    <form action="/add_request_type" method="POST" class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Request Type Name</label>
+                            <input type="text" name="type_name" placeholder="e.g., Leave Request" class="form-control" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Approver Position</label>
+                            <select class="form-control" name="approver_position_id" required>
+                                <option value="" disabled selected>Select a Position</option>
+                                {% for pos in positions %}
+                                    <option value="{{ pos.position_id }}">{{ pos.position_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div style="grid-column: span 2;">
+                            <button type="submit" class="btn-primary">
+                                <i class="fa-solid fa-plus"></i> Add Request Type
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="card-container">
+                    <div class="table-header" style="border-bottom: 1px solid var(--border-color);">
+                        <div class="section-title"><h3>Existing Request Types</h3></div>
+                    </div>
+
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Type Name</th>
+                                    <th>Approver Position</th>
+                                    <th class="text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if existing_types %}
+                                    {% for type in existing_types %}
+                                    <tr>
+                                        <td>#{{ type.request_type_id }}</td>
+                                        <td>{{ type.type_name }}</td>
+                                        <td><span class="role-badge">{{ type.position_name if type.position_name else 'None' }}</span></td>
+                                        <td class="text-right">
+                                            <div class="action-group">
+                                                <button class="action-icon-btn" onclick="openEditModal('{{ type.request_type_id }}', '{{ type.type_name }}', '{{ type.position_id }}')" title="Edit">
+                                                    <i class="fa-regular fa-pen-to-square"></i>
+                                                </button>
+                                                <button class="action-icon-btn icon-delete" onclick="confirmDelete('{{ type.request_type_id }}', '{{ type.type_name }}')" title="Delete">
+                                                    <i class="fa-regular fa-trash-can"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr><td colspan="4" style="text-align:center; padding: 20px;">No request types found.</td></tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-notifications" class="view-section" style="display: none;">
+            <header class="top-header">
+                <div class="header-title"><h2>Notifications</h2></div>
+                <div class="header-actions">
+                    <div class="date-widget">
+                        <i class="fa-regular fa-calendar" style="margin-right: 8px;"></i>
+                        <span class="current-date-display"></span>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-scroll custom-scrollbar">
+                <div class="card-container">
+                    <div class="table-header">
+                        <div class="section-title"><h3>All Activity</h3></div>
+                        <a href="#" class="mark-read-link" onclick="alert('Feature coming soon')">Mark all as read</a>
+                    </div>
+                    <div class="notification-list">
+                        <div style="text-align:center; color:#6b7280; padding:20px;">No new notifications.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="editModal" class="modal-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
+        <div class="modal-content" style="background:white; padding:2rem; border-radius:12px; width:400px;">
+            <h3 style="margin-bottom:1.5rem;">Edit Request Type</h3>
+            <form action="/edit_request_type" method="POST">
+                <input type="hidden" name="type_id" id="edit_type_id">
+                <div class="form-group" style="margin-bottom:1rem;">
+                    <label class="form-label">Request Name</label>
+                    <input type="text" name="type_name" id="edit_type_name" class="form-control" required style="width:100%;">
+                </div>
+                <div class="form-group" style="margin-bottom:1.5rem;">
+                    <label class="form-label">Approver Position</label>
+                    <select name="approver_position_id" id="edit_position_id" class="form-control" style="width:100%;">
+                        <option value="">None (Remove Approver)</option>
+                        {% for pos in positions %}
+                        <option value="{{ pos.position_id }}">{{ pos.position_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div style="display:flex; gap:10px; justify-content:flex-end;">
+                    <button type="button" onclick="closeEditModal()" class="btn-secondary">Cancel</button>
+                    <button type="submit" class="btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // --- Initialization ---
+        window.onload = function() {
+            const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            const today = new Date().toLocaleDateString('en-US', dateOptions);
+            document.querySelectorAll('.current-date-display').forEach(el => el.innerText = today);
+        };
+
+        // --- Navigation ---
+        function switchView(viewName) {
+            document.querySelectorAll('.view-section').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.getElementById(`view-${viewName}`).style.display = 'flex';
+            document.getElementById(`nav-${viewName}`).classList.add('active');
+        }
+
+        // --- Client-Side Table Filtering ---
+        function filterTable() {
+            const searchQuery = document.getElementById("search-input").value.toLowerCase();
+            const statusFilter = document.getElementById("status-filter").value.toLowerCase();
+            const rows = document.querySelectorAll("#requests-table-body tr.request-row");
+
+            rows.forEach(row => {
+                const text = row.innerText.toLowerCase();
+                const status = row.getAttribute('data-status').toLowerCase();
+                const matchesSearch = text.includes(searchQuery);
+                const matchesStatus = statusFilter === "" || status === statusFilter;
+                row.style.display = (matchesSearch && matchesStatus) ? "" : "none";
+            });
+        }
+
+        // --- Actions (Approve/Reject) ---
+        function rejectRequest(requestId) {
+            const reason = prompt("Please enter the reason for rejection:");
+            if (reason === null) return; 
+            if (reason.trim() === "") { alert("Rejection reason is required."); return; }
+            updateStatus(requestId, 'rejected', reason);
+        }
+
+        async function updateStatus(requestId, status, message = "") {
+            if (!confirm(`Mark request #${requestId} as ${status.toUpperCase()}?`)) return;
+
+            try {
+                const response = await fetch(`/api/request/${requestId}/status`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: status, message: message })
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    alert("Success: " + result.message);
+                    location.reload(); 
+                } else {
+                    alert("Error: " + (result.error || "Unknown error"));
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                alert("Network error. Failed to update status.");
+            }
+        }
+
+        // --- Modals ---
+        function openEditModal(id, name, posId) {
+            document.getElementById('edit_type_id').value = id;
+            document.getElementById('edit_type_name').value = name;
+            document.getElementById('edit_position_id').value = posId || "";
+            document.getElementById('editModal').style.display = 'flex';
+        }
+
+        function closeEditModal() { document.getElementById('editModal').style.display = 'none'; }
+
+        function confirmDelete(typeId, typeName) {
+            if (confirm(`Delete request type "${typeName}"?`)) {
+                window.location.href = `/delete_request_type/${typeId}`;
+            }
+        }
+        
+        window.onclick = function(event) {
+            const modal = document.getElementById('editModal');
+            if (event.target == modal) closeEditModal();
+        }
+    </script>
+</body>
+</html>

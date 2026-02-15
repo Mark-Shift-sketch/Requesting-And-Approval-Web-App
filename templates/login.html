@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>login</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="/static/login.css">
+        <script src="/static/login.js"></script>
+
+    </head>
+    <body>
+        <div class="container">
+        
+            <p class="log"> Login</p>
+            {% if message %}
+                <p class="em"> {{ message }}</p>
+            {% endif %}
+            <form action="/login" method="post">
+
+            <input type="text" name='email' placeholder="Email" required>
+
+            
+            <div class="icon">
+                <input type="password" id="loginp" name="pass" placeholder="Password" required>
+                <i id="lT" class="TP" onclick="TTP('loginp', 'lT')">
+                    <img src="/static/eye.png" alt="show Password">
+                </i>
+                
+            </div>
+            <a href='#' class='forgot'>Forgot password?</a>
+
+            <button type='submit' name='login'>Log In</button>
+            
+            <div class="sign">
+                <p>Don't have an account yet?
+                <a href="{{ url_for('signup') }}" class="a">Sign Up</a>
+            </p>
+
+            </div>
+            </form>
+        </div>
+    </body>
+</html>

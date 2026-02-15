@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Corporate Dashboard</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+        /* Custom Scrollbar for tables */
+        .custom-scroll::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scroll::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        
+        /* Fade in animation */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+
+        .sidebar-link.active {
+            background-color: #2563eb;
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        .stat-card.active-filter {
+            ring: 2px solid #3b82f6;
+            transform: scale(1.02);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 font-sans overflow-hidden">
+
+    <div class="flex h-screen w-full">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-white border-r border-slate-200 flex flex-col fixed h-full z-20">
+            <div class="p-6 border-b border-slate-100">
+                <div class="flex items-center gap-3">
+                    <div class="bg-blue-600 p-2 rounded-lg text-white">
+                        <i class="ph ph-squares-four text-xl"></i>
+                    </div>
+                    <h1 class="text-xl font-bold text-slate-800 tracking-tight">CorpDesk</h1>
+                </div>
+            </div>
+            
+            <nav class="flex-1 p-4 space-y-1 overflow-y-auto">
+                <button onclick="switchTab('dashboard')" id="nav-dashboard" class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors active">
+                    <i class="ph ph-chart-pie-slice text-xl"></i>
+                    <span class="font-medium">Dashboard</span>
+                </button>
+                <button onclick="switchTab('inventory')" id="nav-inventory" class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors">
+                    <i class="ph ph-package text-xl"></i>
+                    <span class="font-medium">Inventory</span>
+                </button>
+                <button onclick="switchTab('notifications')" id="nav-notifications" class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors">
+                    <div class="relative">
+                        <i class="ph ph-bell text-xl"></i>
+                        <span id="nav-notif-dot" class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white hidden"></span>
+                    </div>
+                    <span class="font-medium">Notifications</span>
+                </button>
+                <button onclick="switchTab('requests')" id="nav-requests" class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors">
+                    <i class="ph ph-file-text text-xl"></i>
+                    <span class="font-medium">Request Types</span>
+                </button>
+                <button onclick="switchTab('settings')" id="nav-settings" class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors">
+                    <i class="ph ph-gear text-xl"></i>
+                    <span class="font-medium">Settings</span>
+                </button>
+            </nav>
+
+            <div class="p-4 border-t border-slate-100">
+                <button onclick="alert('Logged out successfully!')" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-rose-600 hover:bg-rose-50 transition-colors">
+                    <i class="ph ph-sign-out text-xl"></i>
+                    <span class="font-medium">Log Out</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 ml-64 p-8 overflow-y-auto h-screen relative bg-slate-50">
+            <!-- Top Header -->
+            <div class="flex justify-between items-center mb-8">
+                <div>
+                    <h2 class="text-xl font-medium text-slate-500">Welcome back,</h2>
+                    <h1 class="text-3xl font-bold text-slate-800" id="header-username">User</h1>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-700 font-bold cursor-pointer border border-blue-200">
+                        <i class="ph ph-user text-xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content Area (Dynamic) -->
+            <div id="content-area" class="animate-fade-in">
+                <!-- Javascript will inject content here -->
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals or Overlays can go here -->
+
+    <script>
+        // --- DATA STATE ---
+        let currentUser = {
+            name: 'Alex Administrator',
+            employeeId: 'EMP-9982',
+            department: 'Operations',
+            email: 'alex.admin@company.com'
+        };
+
+        let requests = [
+            { id: 'REQ-001', name: 'John Doe', department: 'IT', file: 'invoice_2024.pdf', status: 'Pending' },
+            { id: 'REQ-002', name: 'Jane Smith', department: 'HR', file: 'leave_form.docx', status: 'Approved' },
+            { id: 'REQ-003', name: 'Mike Ross', department: 'Legal', file: 'contract_draft.pdf', status: 'Rejected' },
+            { id: 'REQ-004', name: 'Sarah Connor', department: 'Ops', file: 'equipment_list.xlsx', status: 'Pending' },
+            { id: 'REQ-005', name: 'Bruce Wayne', department: 'Finance', file: 'budget_q1.pdf', status: 'Approved' }
+        ];
+
+        let inventory = [
+            { id: 1, name: 'Office Chair', quantity: 45, category: 'Furniture' },
+            { id: 2, name: 'Dell Monitor 24"', quantity: 12, category: 'Electronics' },
+            { id: 3, name: 'Wireless Mouse', quantity: 30, category: 'Electronics' },
+            { id: 4, name: 'Printer Paper (Ream)', quantity: 150, category: 'Supplies' },
+            { id: 5, name: 'Stapler', quantity: 10, category: 'Supplies' },
+            { id: 6, name: 'Whiteboard Marker', quantity: 5, category: 'Supplies' }, // Low stock example
+        ];
+
+        let notifications = [
+            { id: 1, text: 'System: Dashboard initialized', time: 'Just now', read: false },
+            { id: 2, text: 'Inventory alert: Whiteboard Marker running low', time: '1 hour ago', read: true },
+        ];
+
+        let requestTypes = [
+            { id: 1, name: 'Purchase Request', approver: 'Finance Manager' },
+            { id: 2, name: 'Leave Application', approver: 'HR Lead' },
+        ];
+
+        let dashboardFilter = 'All'; // 'All', 'Pending', 'Approved', 'Rejected'
+        let inventorySearchTerm = '';
+        let editingInventoryId = null;
+
+        // --- CORE FUNCTIONS ---
+
+        function init() {
+            document.getElementById('header-username').textContent = currentUser.name;
+            switchTab('dashboard');
+            updateNotificationDot();
+        }
+
+        function switchTab(tabId) {
+            // Update Sidebar UI
+            document.querySelectorAll('.sidebar-link').forEach(el => {
+                el.classList.remove('active', 'bg-blue-600', 'text-white', 'shadow-md');
+                el.classList.add('text-slate-600', 'hover:bg-slate-100');
+            });
+            const activeLink = document.getElementById(`nav-${tabId}`);
+            if(activeLink) {
+                activeLink.classList.add('active', 'bg-blue-600', 'text-white', 'shadow-md');
+                activeLink.classList.remove('text-slate-600', 'hover:bg-slate-100');
+            }
+
+            // Render Content
+            const contentDiv = document.getElementById('content-area');
+            contentDiv.innerHTML = ''; // Clear current content
+            contentDiv.classList.remove('animate-fade-in');
+            void contentDiv.offsetWidth; // Trigger reflow for animation reset
+            contentDiv.classList.add('animate-fade-in');
+
+            if (tabId === 'dashboard') renderDashboard(contentDiv);
+            if (tabId === 'inventory') renderInventory(contentDiv);
+            if (tabId === 'notifications') renderNotifications(contentDiv);
+            if (tabId === 'requests') renderRequestTypes(contentDiv);
+            if (tabId === 'settings') renderSettings(contentDiv);
+        }
+
+        function addNotification(text) {
+            notifications.unshift({
+                id: Date.now(),
+                text: text,
+                time: 'Just now',
+                read: false
+            });
+            updateNotificationDot();
+        }
+
+        function updateNotificationDot() {
+            const hasUnread = notifications.some(n => !n.read);
+            const dot = document.getElementById('nav-notif-dot');
+            if(dot) dot.style.display = hasUnread ? 'block' : 'none';
+        }
+
+        // --- DASHBOARD RENDERER ---
+
+        function renderDashboard(container) {
+            // Calculate Stats
+            const stats = {
+                total: requests.length,
+                pending: requests.filter(r => r.status === 'Pending').length,
+                approved: requests.filter(r => r.status === 'Approved').length,
+                rejected: requests.filter(r => r.status === 'Rejected').length
+            };
+
+            // HTML for Cards
+            const cardsHtml = `
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                    <div onclick="setDashboardFilter('All')" class="stat-card cursor-pointer bg-white p-6 rounded-xl shadow-sm border border-slate-100 transition-all hover:shadow-md ${dashboardFilter === 'All' ? 'active-filter ring-2 ring-blue-500' : ''}">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="p-3 rounded-full bg-blue-500 text-white"><i class="ph ph-squares-four text-xl"></i></div>
+                            <span class="text-3xl font-bold text-slate-800">${stats.total}</span>
+                        </div>
+                        <h3 class="text-slate-500 font-medium">Total Requests</h3>
+                    </div>
+                    <div onclick="setDashboardFilter('Pending')" class="stat-card cursor-pointer bg-white p-6 rounded-xl shadow-sm border border-slate-100 transition-all hover:shadow-md ${dashboardFilter === 'Pending' ? 'active-filter ring-2 ring-amber-500' : ''}">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="p-3 rounded-full bg-amber-500 text-white"><i class="ph ph-clock text-xl"></i></div>
+                            <span class="text-3xl font-bold text-slate-800">${stats.pending}</span>
+                        </div>
+                        <h3 class="text-slate-500 font-medium">Pending</h3>
+                    </div>
+                    <div onclick="setDashboardFilter('Approved')" class="stat-card cursor-pointer bg-white p-6 rounded-xl shadow-sm border border-slate-100 transition-all hover:shadow-md ${dashboardFilter === 'Approved' ? 'active-filter ring-2 ring-emerald-500' : ''}">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="p-3 rounded-full bg-emerald-500 text-white"><i class="ph ph-check-circle text-xl"></i></div>
+                            <span class="text-3xl font-bold text-slate-800">${stats.approved}</span>
+                        </div>
+                        <h3 class="text-slate-500 font-medium">Approved</h3>
+                    </div>
+                    <div onclick="setDashboardFilter('Rejected')" class="stat-card cursor-pointer bg-white p-6 rounded-xl shadow-sm border border-slate-100 transition-all hover:shadow-md ${dashboardFilter === 'Rejected' ? 'active-filter ring-2 ring-rose-500' : ''}">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="p-3 rounded-full bg-rose-500 text-white"><i class="ph ph-x-circle text-xl"></i></div>
+                            <span class="text-3xl font-bold text-slate-800">${stats.rejected}</span>
+                        </div>
+                        <h3 class="text-slate-500 font-medium">Rejected</h3>
+                    </div>
+                </div>
+            `;
+
+            // Filter Table
+            const filteredReqs = dashboardFilter === 'All' ? requests : requests.filter(r => r.status === dashboardFilter);
+
+            let tableRows = filteredReqs.map(req => `
+                <tr class="hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0">
+                    <td class="px-6 py-4 font-medium text-slate-900">${req.id}</td>
+                    <td class="px-6 py-4 text-slate-600">${req.name}</td>
+                    <td class="px-6 py-4 text-slate-600"><span class="px-2 py-1 bg-slate-100 rounded text-xs font-semibold uppercase text-slate-500">${req.department}</span></td>
+                    <td class="px-6 py-4 text-blue-600 flex items-center gap-2 cursor-pointer hover:underline"><i class="ph ph-file-text"></i> ${req.file}</td>
+                    <td class="px-6 py-4">
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium 
+                            ${req.status === 'Approved' ? 'bg-emerald-100 text-emerald-700' : 
+                              req.status === 'Rejected' ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700'}">
+                            ${req.status === 'Approved' ? '<i class="ph ph-check-circle"></i>' : 
+                              req.status === 'Rejected' ? '<i class="ph ph-x-circle"></i>' : '<i class="ph ph-clock"></i>'}
+                            ${req.status}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-right">
+                        ${req.status === 'Pending' ? `
+                            <button onclick="updateRequestStatus('${req.id}', 'Approved')" class="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded" title="Approve"><i class="ph ph-check text-lg"></i></button>
+                            <button onclick="updateRequestStatus('${req.id}', 'Rejected')" class="p-1.5 text-rose-600 hover:bg-rose-50 rounded" title="Reject"><i class="ph ph-x text-lg"></i></button>
+                        ` : `
+                            <button onclick="updateRequestStatus('${req.id}', 'Pending')" class="p-1.5 text-amber-600 hover:bg-amber-50 rounded" title="Move to Pending"><i class="ph ph-arrow-u-up-left text-lg"></i></button>
+                        `}
+                    </td>
+                </tr>
+            `).join('');
+
+            if (filteredReqs.length === 0) tableRows = `<tr><td colspan="6" class="px-6 py-8 text-center text-slate-400">No requests found.</td></tr>`;
+
+            const tableHtml = `
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center">
+                        <h3 class="font-semibold text-lg text-slate-700">${dashboardFilter} Requests</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="bg-slate-50 text-slate-600">
+                                <tr>
+                                    <th class="px-6 py-3 font-medium">Req ID</th>
+                                    <th class="px-6 py-3 font-medium">Name</th>
+                                    <th class="px-6 py-3 font-medium">Department</th>
+                                    <th class="px-6 py-3 font-medium">File</th>
+                                    <th class="px-6 py-3 font-medium">Status</th>
+                                    <th class="px-6 py-3 font-medium text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>${tableRows}</tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+
+            container.innerHTML = `<h2 class="text-2xl font-bold text-slate-800 mb-6">Dashboard Overview</h2>` + cardsHtml + tableHtml;
+        }
+
+        function setDashboardFilter(filter) {
+            dashboardFilter = filter;
+            renderDashboard(document.getElementById('content-area'));
+        }
+
+        function updateRequestStatus(id, status) {
+            const req = requests.find(r => r.id === id);
+            if (req) {
+                req.status = status;
+                addNotification(`Request ${id} marked as ${status}`);
+                renderDashboard(document.getElementById('content-area'));
+            }
+        }
+
+        // --- INVENTORY RENDERER ---
+
+        function renderInventory(container) {
+            const filteredInv = inventory.filter(item => item.name.toLowerCase().includes(inventorySearchTerm.toLowerCase()));
+
+            const tableRows = filteredInv.map(item => `
+                <tr class="hover:bg-slate-50 transition-colors border-b border-slate-100">
+                    <td class="px-6 py-4 font-medium text-slate-800">${item.name}</td>
+                    <td class="px-6 py-4 text-slate-600">${item.category}</td>
+                    <td class="px-6 py-4">
+                        <span class="font-mono font-bold ${item.quantity < 20 ? 'text-rose-600' : 'text-slate-700'}">
+                            ${item.quantity}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-right space-x-2">
+                        <button onclick="editInventoryItem(${item.id})" class="text-blue-600 hover:text-blue-800 p-1"><i class="ph ph-pencil-simple text-lg"></i></button>
+                        <button onclick="deleteInventoryItem(${item.id})" class="text-rose-600 hover:text-rose-800 p-1"><i class="ph ph-trash text-lg"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+
+            // If editing, fill form values
+            let editName = '', editQty = '', editCat = '';
+            if (editingInventoryId) {
+                const item = inventory.find(i => i.id === editingInventoryId);
+                if (item) { editName = item.name; editQty = item.quantity; editCat = item.category; }
+            }
+
+            container.innerHTML = `
+                <h2 class="text-2xl font-bold text-slate-800 mb-6">Inventory Management</h2>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-180px)]">
+                    
+                    <!-- Product List (Scrollable) -->
+                    <div class="lg:col-span-2 flex flex-col bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div class="p-4 border-b border-slate-100 flex gap-4">
+                            <div class="relative flex-1">
+                                <i class="ph ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                <input type="text" placeholder="Search products..." 
+                                    onkeyup="handleInventorySearch(this.value)"
+                                    value="${inventorySearchTerm}"
+                                    class="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                        </div>
+                        <div class="flex-1 overflow-y-auto custom-scroll">
+                            <table class="w-full text-left">
+                                <thead class="bg-slate-50 text-slate-600 sticky top-0 z-10 shadow-sm">
+                                    <tr>
+                                        <th class="px-6 py-3 font-medium">Product Name</th>
+                                        <th class="px-6 py-3 font-medium">Category</th>
+                                        <th class="px-6 py-3 font-medium">Qty</th>
+                                        <th class="px-6 py-3 font-medium text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${tableRows.length ? tableRows : '<tr><td colspan="4" class="p-6 text-center text-slate-400">No products found.</td></tr>'}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Add/Edit Form -->
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 h-fit">
+                        <h3 class="font-semibold text-lg text-slate-700 mb-4">${editingInventoryId ? 'Edit Product' : 'Add New Product'}</h3>
+                        <form onsubmit="handleInventorySubmit(event)">
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-600 mb-1">Name</label>
+                                    <input type="text" id="inv-name" required value="${editName}" class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-600 mb-1">Category</label>
+                                    <input type="text" id="inv-cat" required value="${editCat}" class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-600 mb-1">Quantity</label>
+                                    <input type="number" id="inv-qty" required value="${editQty}" class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div class="flex gap-2 pt-2">
+                                    <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-medium transition-colors">
+                                        ${editingInventoryId ? 'Update' : 'Add Product'}
+                                    </button>
+                                    ${editingInventoryId ? `<button type="button" onclick="cancelEditInventory()" class="px-4 py-2 border border-slate-200 rounded-lg hover:bg-slate-50">Cancel</button>` : ''}
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+        }
+
+        function handleInventorySearch(val) {
+            inventorySearchTerm = val;
+            renderInventory(document.getElementById('content-area'));
+            // Keep focus on input after re-render (naive approach for this demo)
+            const input = document.querySelector('input[placeholder="Search products..."]');
+            input.focus();
+            input.setSelectionRange(input.value.length, input.value.length);
+        }
+
+        function handleInventorySubmit(e) {
+            e.preventDefault();
+            const name = document.getElementById('inv-name').value;
+            const cat = document.getElementById('inv-cat').value;
+            const qty = parseInt(document.getElementById('inv-qty').value);
+
+            if (editingInventoryId) {
+                const index = inventory.findIndex(i => i.id === editingInventoryId);
+                if (index !== -1) {
+                    inventory[index] = { ...inventory[index], name, category: cat, quantity: qty };
+                    addNotification(`Updated inventory: ${name}`);
+                }
+                editingInventoryId = null;
+            } else {
+                inventory.push({ id: Date.now(), name, category: cat, quantity: qty });
+                addNotification(`Added new product: ${name}`);
+            }
+            renderInventory(document.getElementById('content-area'));
+        }
+
+        function deleteInventoryItem(id) {
+            if(confirm('Are you sure?')) {
+                inventory = inventory.filter(i => i.id !== id);
+                addNotification('Inventory item deleted');
+                renderInventory(document.getElementById('content-area'));
+            }
+        }
+
+        function editInventoryItem(id) {
+            editingInventoryId = id;
+            renderInventory(document.getElementById('content-area'));
+        }
+
+        function cancelEditInventory() {
+            editingInventoryId = null;
+            renderInventory(document.getElementById('content-area'));
+        }
+
+        // --- NOTIFICATIONS RENDERER ---
+
+        function renderNotifications(container) {
+            const listHtml = notifications.map(n => `
+                <div class="p-4 flex items-start gap-4 hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0">
+                    <div class="bg-blue-100 text-blue-600 p-2 rounded-full mt-1">
+                        <i class="ph ph-bell text-lg"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-slate-800 font-medium">${n.text}</p>
+                        <p class="text-xs text-slate-500 mt-1">${n.time}</p>
+                    </div>
+                    ${!n.read ? '<div class="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>' : ''}
+                </div>
+            `).join('');
+
+            container.innerHTML = `
+                <div class="max-w-3xl mx-auto space-y-6">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-2xl font-bold text-slate-800">Notifications</h2>
+                        <button onclick="markAllRead()" class="text-sm text-blue-600 hover:underline">Mark all as read</button>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200">
+                        ${listHtml || '<div class="p-8 text-center text-slate-500">No notifications.</div>'}
+                    </div>
+                </div>
+            `;
+        }
+
+        function markAllRead() {
+            notifications.forEach(n => n.read = true);
+            updateNotificationDot();
+            renderNotifications(document.getElementById('content-area'));
+        }
+
+        // --- REQUEST TYPE RENDERER ---
+
+        function renderRequestTypes(container) {
+            const listHtml = requestTypes.map(type => `
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex justify-between items-center">
+                    <div class="flex items-center gap-4">
+                        <div class="p-3 bg-purple-100 text-purple-600 rounded-lg"><i class="ph ph-files text-xl"></i></div>
+                        <div>
+                            <h4 class="font-bold text-slate-800">${type.name}</h4>
+                            <p class="text-sm text-slate-500">Approver: <span class="font-medium text-slate-700">${type.approver}</span></p>
+                        </div>
+                    </div>
+                    <button onclick="deleteRequestType(${type.id})" class="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"><i class="ph ph-trash text-xl"></i></button>
+                </div>
+            `).join('');
+
+            container.innerHTML = `
+                <h2 class="text-2xl font-bold text-slate-800 mb-6">Request Type Management</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 h-fit">
+                        <h3 class="font-semibold text-lg text-slate-700 mb-4">Create New Type</h3>
+                        <form onsubmit="handleAddRequestType(event)">
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-600 mb-1">Type Name</label>
+                                    <input type="text" id="rt-name" required placeholder="e.g. Travel Request" class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-600 mb-1">Approver Role</label>
+                                    <select id="rt-approver" required class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <option value="">Select Role</option>
+                                        <option value="HR Manager">HR Manager</option>
+                                        <option value="Finance Lead">Finance Lead</option>
+                                        <option value="IT Admin">IT Admin</option>
+                                    </select>
+                                </div>
+                                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-medium transition-colors">Create Type</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="md:col-span-2 space-y-4">
+                        ${listHtml}
+                    </div>
+                </div>
+            `;
+        }
+
+        function handleAddRequestType(e) {
+            e.preventDefault();
+            const name = document.getElementById('rt-name').value;
+            const approver = document.getElementById('rt-approver').value;
+            requestTypes.push({ id: Date.now(), name, approver });
+            addNotification(`Created Request Type: ${name}`);
+            renderRequestTypes(document.getElementById('content-area'));
+        }
+
+        function deleteRequestType(id) {
+            requestTypes = requestTypes.filter(rt => rt.id !== id);
+            addNotification('Deleted request type');
+            renderRequestTypes(document.getElementById('content-area'));
+        }
+
+        // --- SETTINGS RENDERER ---
+
+        function renderSettings(container) {
+            container.innerHTML = `
+                <div class="max-w-2xl mx-auto space-y-6">
+                    <h2 class="text-2xl font-bold text-slate-800">Account Settings</h2>
+                    <form onsubmit="handleSettingsUpdate(event)" class="bg-white p-8 rounded-xl shadow-sm border border-slate-200">
+                        <div class="flex items-center gap-4 mb-8">
+                            <div class="w-20 h-20 bg-slate-200 rounded-full flex items-center justify-center text-slate-400">
+                                <i class="ph ph-user text-4xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-bold text-slate-800">${currentUser.name}</h3>
+                                <p class="text-slate-500">Employee</p>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Full Name</label>
+                                <input type="text" id="set-name" value="${currentUser.name}" class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Employee ID</label>
+                                <input type="text" value="${currentUser.employeeId}" disabled class="w-full px-4 py-2 border border-slate-200 rounded-lg bg-slate-50 text-slate-400 cursor-not-allowed">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Department</label>
+                                <input type="text" id="set-dept" value="${currentUser.department}" class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Email</label>
+                                <input type="email" id="set-email" value="${currentUser.email}" class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                        </div>
+                        <div class="flex justify-end pt-4 border-t border-slate-100">
+                            <button type="submit" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg font-medium transition-colors">
+                                <i class="ph ph-floppy-disk text-lg"></i> Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            `;
+        }
+
+        function handleSettingsUpdate(e) {
+            e.preventDefault();
+            currentUser.name = document.getElementById('set-name').value;
+            currentUser.department = document.getElementById('set-dept').value;
+            currentUser.email = document.getElementById('set-email').value;
+            document.getElementById('header-username').textContent = currentUser.name;
+            addNotification('Profile settings updated');
+        }
+
+        // Initialize App
+        window.onload = init;
+
+    </script>
+</body>
+</html>

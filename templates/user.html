@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Dashboard</title>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="/static/user.css">
+</head>
+
+<body>
+
+<div class="app-container">
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <i data-lucide="user"></i>
+                <span>Employee Portal</span>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <ul>
+                <li>
+                    <a onclick="showSection('dashboard')" id="nav-dashboard" class="active">
+                        <i data-lucide="layout-dashboard"></i> Dashboard
+                    </a>
+                </li>
+                <li>
+                    <a onclick="showSection('notifications')" id="nav-notifications">
+                        <i data-lucide="bell"></i> Notifications
+                        <span id="notif-badge" style="display: none;">0</span>
+                    </a>
+                </li>
+                <li>
+                    <a onclick="showSection('settings')" id="nav-settings">
+                        <i data-lucide="settings"></i> Settings
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <div class="sidebar-footer">
+            <button onclick="logout()">
+                <i data-lucide="log-out"></i> Logout
+            </button>
+        </div>
+    </aside>
+
+    <div class="mobile-header">
+        <div class="mobile-header-inner">
+            <div class="logo">
+                <i data-lucide="user"></i>
+                <span>Employee Portal</span>
+            </div>
+            <button onclick="toggleMobileMenu()" class="btn-link">
+                <i data-lucide="menu" style="color: var(--text);"></i>
+            </button>
+        </div>
+
+        <div id="mobile-menu" class="mobile-menu">
+            <a onclick="showSection('dashboard'); toggleMobileMenu();">Dashboard</a>
+            <a onclick="showSection('notifications'); toggleMobileMenu();">Notifications</a>
+            <a onclick="showSection('settings'); toggleMobileMenu();">Settings</a>
+            <a onclick="logout()" class="text-danger font-bold">Logout</a>
+        </div>
+    </div>
+
+    <main class="main-content">
+        <div class="top-bar">
+            <div class="page-info">
+                <h1 id="page-title">Dashboard</h1>
+                <p>Welcome back, <span id="user-display-name">User</span></p>
+            </div>
+            <div class="user-info">
+                <div class="current-date">
+                    <i data-lucide="calendar"></i>
+                    <span id="current-date"></span>
+                </div>
+                <div class="profile">
+                    <img id="user-avatar" src="https://ui-avatars.com/api/?name=User&background=eff6ff&color=2563eb" alt="User">
+                    <div class="profile-text">
+                        <p id="profile-name">Loading...</p>
+                        <p id="profile-dept">...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-wrapper">
+            
+            <div id="section-dashboard" class="section fade-in">
+                <div class="cards-grid">
+                    <div class="card interactive" onclick="filterRequests('your')">
+                        <div class="card-header">
+                            <div class="icon-wrapper icon-blue"><i data-lucide="file-text"></i></div>
+                        </div>
+                        <h3 id="stats-pending">0</h3>
+                        <p>Your Requests</p>
+                    </div>
+
+                    <div class="card interactive" onclick="filterRequests('rejected')">
+                        <div class="card-header">
+                            <div class="icon-wrapper icon-red"><i data-lucide="x-circle"></i></div>
+                        </div>
+                        <h3 id="stats-rejected">0</h3>
+                        <p>Rejected</p>
+                    </div>
+
+                    <div class="card interactive" onclick="filterRequests('approved')">
+                        <div class="card-header">
+                            <div class="icon-wrapper icon-green"><i data-lucide="check-circle"></i></div>
+                        </div>
+                        <h3 id="stats-approved">0</h3>
+                        <p>Approved</p>
+                    </div>
+
+                    <div class="card interactive" onclick="filterRequests('history')">
+                        <div class="card-header">
+                            <div class="icon-wrapper icon-purple"><i data-lucide="clock"></i></div>
+                        </div>
+                        <h3 id="stats-total">0</h3>
+                        <p>Total History</p>
+                    </div>
+                </div>
+
+                <div class="subnav-tabs">
+                    <button onclick="filterRequests('all')" id="tab-all" class="nav-tab active">All Requests</button>
+                    <button onclick="filterRequests('your')" id="tab-your" class="nav-tab">Your Requests</button>
+                    <button onclick="filterRequests('rejected')" id="tab-rejected" class="nav-tab">Rejected</button>
+                    <button onclick="filterRequests('approved')" id="tab-approved" class="nav-tab">Approved</button>
+                </div>
+
+                <div class="requests-table-wrapper">
+                    <div class="table-controls">
+                        <div class="table-title">
+                            <h2 id="table-title">All Requests</h2>
+                            <span id="request-count" class="badge badge-blue">0</span>
+                        </div>
+                        <div class="table-actions">
+                            <input type="text" id="search-input" placeholder="Search requests..." onkeyup="searchRequests()">
+                            <button onclick="createNewRequest()" class="btn btn-primary">
+                                <i data-lucide="plus" class="icon-sm"></i> New Request
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Req ID</th>
+                                    <th>Type</th>
+                                    <th>File</th>
+                                    <th>Status</th>
+                                    <th>Current Stage</th>
+                                    <th id="rejection-header" class="hidden">Rejection Message</th>
+                                    <th>Submitted On</th>
+                                    <th class="text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="requests-table-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="section-notifications" class="section hidden fade-in">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="text-xl font-bold">All Activity</h2>
+                        <button class="btn-link" onclick="markAllRead()">Mark all as read</button>
+                    </div>
+                    <div id="notifications-list" class="mt-4"></div>
+                </div>
+            </div>
+
+            <div id="section-settings" class="section hidden fade-in">
+                <div class="settings-grid">
+                    <div class="card">
+                        <h2 class="card-title"><i data-lucide="user"></i> Personal Information</h2>
+                        <div class="form-group-wrapper">
+                            <div class="form-group">
+                                <label>Email</label>
+                                <input type="email" id="user-email" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label>Department</label>
+                                <input type="text" id="user-dept-display" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label>Position Role</label>
+                                <input type="text" id="user-pos-display" readonly>
+                            </div>
+                            <p class="text-muted text-sm mt-2">Information managed by HR department.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<div id="toast" class="toast">
+    <div id="toast-icon"></div>
+    <div><p id="toast-title" class="toast-title"></p><p id="toast-message" class="toast-message"></p></div>
+</div>
+
+<div id="request-modal" class="modal">
+    <div class="modal-content">
+        <h3>Create New Request</h3>
+        <!-- Uses the same /create_request route as your Flask backend (supports templates + file upload) -->
+        <form id="new-request-form" action="/create_request" method="POST" enctype="multipart/form-data">
+            <div class="form-group">
+                <label>Request Type</label>
+                <select name="request_type_id" id="modal-req-type" required onchange="checkTemplate()">
+                    <option value="" selected disabled>Select a type...</option>
+                    {% for type in request_types %}
+                        <option value="{{ type.request_type_id }}"
+                                data-has-template="{{ 'yes' if type.template_filename else 'no' }}"
+                                data-template-filename="{{ type.template_filename or '' }}">
+                            {{ type.type_name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Template download prompt (shown only when a request type has a template) -->
+            <div id="templateSection" style="display: none; background: #f0f9ff; padding: 10px; border-radius: 6px; margin-bottom: 15px; border: 1px solid #bae6fd;">
+                <p style="margin: 0; font-size: 14px; color: #0369a1;">
+                    <i data-lucide="download"></i>
+                    This request requires a specific form.
+                    <a id="downloadLink" href="#" style="font-weight: bold; text-decoration: underline;">Download Template Here</a>
+                </p>
+            </div>
+
+            <div class="form-group">
+                <label>Upload Filled Form</label>
+                <input type="file" name="file" class="form-control" required>
+            </div>
+            <div class="modal-actions">
+                <button type="button" onclick="closeRequestModal()" class="btn-cancel">Cancel</button>
+                <button type="submit" class="btn-submit">Submit Request</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="rejection-modal" class="modal">
+    <div class="modal-content">
+        <h3>Rejection Details</h3>
+        <p id="rejection-message" class="value rejection-message"></p>
+        <div class="modal-actions">
+            <button onclick="closeRejectionModal()" class="btn-cancel">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- Removed duplicate "modal-body" create-request form.
+     The "New Request" modal above now handles templates + uploads. -->
+
+<script>
+    // --- Configuration ---
+    const API_URL = '/api'; 
+    let userRequests = [];
+    let currentFilter = 'all';
+
+    // --- Initialization ---
+    document.addEventListener('DOMContentLoaded', () => {
+        lucide.createIcons();
+        updateDate();
+        fetchUserData();
+        refreshDashboard();
+        fetchNotifications(); 
+    });
+
+    async function refreshDashboard() {
+        await fetchRequests();
+        renderRequests(currentFilter);
+        updateStats();
+    }
+
+    function updateDate() {
+        document.getElementById('current-date').textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    }
+
+    // --- Database Fetching Functions ---
+
+    async function fetchUserData() {
+        try {
+            const res = await fetch(`${API_URL}/user-profile`);
+            const data = await res.json();
+            
+            // Set Inputs
+            document.getElementById('user-email').value = data.email || '';
+            document.getElementById('user-dept-display').value = data.dept_name || '';
+            document.getElementById('user-pos-display').value = data.position_name || '';
+            
+            // Set UI Headers
+            document.getElementById('profile-name').textContent = data.email ? data.email.split('@')[0] : 'User';
+            document.getElementById('profile-dept').textContent = data.dept_name || '...';
+            document.getElementById('user-display-name').textContent = data.email ? data.email.split('@')[0] : 'User';
+            
+        } catch (e) { console.error("Database user fetch failed"); }
+    }
+
+    async function fetchRequests() {
+        try {
+            const res = await fetch(`${API_URL}/requests`); 
+            userRequests = await res.json();
+        } catch (e) { showToast('Error', 'Could not sync with database', 'danger'); }
+    }
+
+    // Request types are server-rendered in the modal via Jinja, so no fetch needed.
+
+    // --- UI Rendering ---
+
+    function renderRequests(filter) {
+        const tbody = document.getElementById('requests-table-body');
+        tbody.innerHTML = '';
+
+        let filtered = userRequests;
+        if (filter === 'your') filtered = userRequests.filter(r => r.status_name.toLowerCase() === 'pending');
+        else if (filter === 'rejected') filtered = userRequests.filter(r => r.status_name.toLowerCase() === 'rejected');
+        else if (filter === 'approved') filtered = userRequests.filter(r => r.status_name.toLowerCase() === 'approved');
+
+        document.getElementById('request-count').textContent = filtered.length;
+        document.getElementById('rejection-header').classList.toggle('hidden', filter !== 'rejected');
+
+        if(filtered.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">No requests found.</td></tr>';
+            return;
+        }
+
+        filtered.forEach(req => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${req.request_id}</td>
+                <td class="font-medium">${req.type_name}</td>
+                <td><span class="file-link">${req.filename}</span></td>
+                <td><span class="status-badge status-${req.status_name.toLowerCase()}">${req.status_name}</span></td>
+                <td>${req.position_name || 'Processing'}</td>
+                ${filter === 'rejected' ? `<td>${req.rejection_message || '-'}</td>` : ''}
+                <td>${new Date(req.created_at).toLocaleDateString()}</td>
+                <td class="text-right">
+                    ${req.status_name.toLowerCase() === 'rejected' ? 
+                        `<button onclick="viewRejection('${req.rejection_message}')" class="btn-link">Details</button>` : 
+                        `<span class="text-muted">-</span>`}
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function searchRequests() {
+        const query = document.getElementById('search-input').value.toLowerCase();
+        // Simple client-side search filtering
+        const tbody = document.getElementById('requests-table-body');
+        const rows = tbody.getElementsByTagName('tr');
+        
+        for (let row of rows) {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(query) ? '' : 'none';
+        }
+    }
+
+    function updateStats() {
+        document.getElementById('stats-total').textContent = userRequests.length;
+        document.getElementById('stats-pending').textContent = userRequests.filter(r => r.status_name.toLowerCase() === 'pending').length;
+        document.getElementById('stats-approved').textContent = userRequests.filter(r => r.status_name.toLowerCase() === 'approved').length;
+        document.getElementById('stats-rejected').textContent = userRequests.filter(r => r.status_name.toLowerCase() === 'rejected').length;
+    }
+
+    // --- Actions ---
+
+    // Template toggle for the "New Request" modal.
+    function checkTemplate() {
+        const select = document.getElementById('modal-req-type');
+        const option = select.options[select.selectedIndex];
+        const hasTemplate = option?.dataset?.hasTemplate === 'yes';
+
+        const section = document.getElementById('templateSection');
+        const link = document.getElementById('downloadLink');
+
+        if (!section || !link) return;
+
+        if (hasTemplate) {
+            const typeId = option.value;
+            section.style.display = 'block';
+            link.href = `/download_template/${typeId}`;
+        } else {
+            section.style.display = 'none';
+            link.href = '#';
+        }
+
+        // Re-render icons if this section becomes visible
+        if (window.lucide) lucide.createIcons();
+    }
+
+    // --- Notification Functions ---
+
+    async function fetchNotifications() {
+        try {
+            const res = await fetch(`${API_URL}/user_notifications`);
+            const notifications = await res.json();
+            renderNotifications(notifications);
+        } catch (e) {
+            console.error("Failed to load notifications", e);
+        }
+    }
+
+    function renderNotifications(notifs) {
+        const list = document.getElementById('notifications-list');
+        const badge = document.getElementById('notif-badge');
+        
+        list.innerHTML = '';
+
+        if (notifs.length === 0) {
+            list.innerHTML = '<div class="empty-state"><p class="text-muted">No recent activity found.</p></div>';
+            badge.style.display = 'none';
+            return;
+        }
+
+        badge.textContent = notifs.length;
+        badge.style.display = 'flex';
+
+        notifs.forEach(n => {
+            const item = document.createElement('div');
+            item.className = `notification-item status-${n.type}`;
+            
+            item.innerHTML = `
+                <div class="notif-icon-wrapper">
+                    <i data-lucide="${n.icon}"></i>
+                </div>
+                <div class="notif-content">
+                    <div class="notif-header">
+                        <span class="notif-title">${n.title}</span>
+                        <span class="notif-time">${n.time}</span>
+                    </div>
+                    <p class="notif-message">${n.message}</p>
+                </div>
+            `;
+            list.appendChild(item);
+        });
+        
+        lucide.createIcons();
+    }
+
+    function markAllRead() {
+        document.getElementById('notif-badge').style.display = 'none';
+        showToast('Success', 'Notifications marked as read', 'success');
+    }
+
+    // --- Navigation & Helpers ---
+
+    function showSection(section) {
+        // Hide all sections
+        ['dashboard', 'notifications', 'settings'].forEach(s => {
+            document.getElementById(`section-${s}`).classList.add('hidden');
+        });
+        // Show target
+        document.getElementById(`section-${section}`).classList.remove('hidden');
+        
+        // Update Sidebar
+        document.querySelectorAll('.sidebar-nav a').forEach(link => link.classList.remove('active'));
+        document.getElementById(`nav-${section}`).classList.add('active');
+        
+        // Update Title
+        document.getElementById('page-title').textContent = section.charAt(0).toUpperCase() + section.slice(1);
+    }
+
+    function filterRequests(type) {
+        currentFilter = type;
+        document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+        document.getElementById(`tab-${type}`)?.classList.add('active');
+        renderRequests(type);
+    }
+
+    function viewRejection(msg) {
+        document.getElementById('rejection-message').textContent = msg;
+        document.getElementById('rejection-modal').classList.add('show');
+    }
+
+    function closeRejectionModal() { document.getElementById('rejection-modal').classList.remove('show'); }
+    function createNewRequest() { document.getElementById('request-modal').classList.add('show'); }
+    function closeRequestModal() { document.getElementById('request-modal').classList.remove('show'); }
+
+    function showToast(title, message, type) {
+        const toast = document.getElementById('toast');
+        document.getElementById('toast-title').textContent = title;
+        document.getElementById('toast-message').textContent = message;
+        toast.className = `toast toast-${type} show`; // Assumes CSS supports .toast-success/danger
+        setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    function toggleMobileMenu() { document.getElementById('mobile-menu').classList.toggle('show'); }
+    function logout() { if(confirm('Logout?')) window.location.href = '/logout'; }
+
+    // checkTemplate() is defined earlier for the New Request modal
+</script>
+</body>
+</html>

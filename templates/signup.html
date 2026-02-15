@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sign Up</title>
+    <link rel="stylesheet" href="/static/signup.css">
+    <link rel="stylesheet" href="/static/login.css">
+    <script src="/static/login.js"></script>
+</head>
+
+<body>
+
+<div class="container">
+    {% if message %}
+        <p class="em"> {{ message }}</p>
+    {% endif %}
+    <h1 class='signuplogo'>Sign Up</h1>
+
+    <form method="POST" action="/signup">
+
+        <input type="email" id="email" name="email" placeholder="Email" required>
+
+        <div class="icon">
+        <input type="password" id="pass1" name="pass" placeholder="Password" required>
+            <i id="eye1" class="TP" onclick="TTP('pass1', 'eye1')">
+                <img src="/static/eye.png" alt="show Password">
+            </i>
+        </div>
+
+        <div class="icon">
+            <input type="password" id="pass2" name="cpass" placeholder="Confirm Password" required>
+            <i id="eye2" class="TP" onclick="TTP('pass2', 'eye2')">
+                <img src="/static/eye.png" alt="show Password">
+            </i>
+        </div>
+        
+        <select class='dept' name="dept" id="dept" required>
+            <option value="">Select Department</option>
+            {% for d in departments %}
+                <option value="{{ d['dept_name'] }}">{{ d['dept_name'] }}</option>
+            {% endfor %}
+        </select>
+
+        <button type="button" class="go" id="getOtpBtn">Get OTP</button>
+
+
+        <div class="overlay" id="overlay">
+            <div class="confirmation-modal">
+                <h2>Verification</h2>
+                <p>Enter 6-digit OTP sent to your email</p>
+
+                <div class="otpE">
+                    <input class="Eotp" maxlength="1">
+                    <input class="Eotp" maxlength="1">
+                    <input class="Eotp" maxlength="1">
+                    <input class="Eotp" maxlength="1">
+                    <input class="Eotp" maxlength="1">
+                    <input class="Eotp" maxlength="1">
+                </div>
+
+                <button type="button" id="verifyOtpBtn">Verify OTP</button>
+            </div>
+        </div>
+
+        <button class="signup" id="signupBtn" type="submit" disabled>
+            Sign Me Up
+        </button>
+
+        <div class="sign">
+                <p>Already have Account?
+                <a href="{{ url_for('login') }}" class="a">Log in</a>
+            </p>
+
+    </form>
+</div>
+
+<script>
+    const getOtpBtn = document.getElementById("getOtpBtn");
+    const verifyOtpBtn = document.getElementById("verifyOtpBtn");
+    const overlay = document.getElementById("overlay");
+    const signupBtn = document.getElementById("signupBtn");
+
+    getOtpBtn.onclick = () => {
+        const email = document.getElementById("email").value;
+        if (!email) return alert("Enter email first");
+
+        // CHANGE THIS LINE: /sotp -> /srotp
+        fetch("/srotp", {  
+            method: "POST",
+            headers: {"Content-Type": "application/x-www-form-urlencoded"},
+            body: "email=" + encodeURIComponent(email)
+        })
+        .then(res => res.text())
+        .then(msg => {
+            alert(msg);
+            if (msg.includes("OTP sent") || msg.includes("successfully")) {
+                 // Make sure the overlay ID matches your HTML
+                const overlay = document.getElementById("overlay");
+                overlay.style.display = "flex";
+            }
+        });
+    };
+
+verifyOtpBtn.onclick = () => {
+    const email = document.getElementById("email").value;
+    let otp = "";
+    document.querySelectorAll(".Eotp").forEach(i => otp += i.value);
+
+    if (otp.length !== 6) return alert("Enter 6-digit OTP");
+
+    fetch("/verify", {
+        method: "POST",
+        headers: {"Content-Type": "application/x-www-form-urlencoded"},
+        body: "email=" + encodeURIComponent(email) + "&otp=" + otp
+    })
+    .then(res => res.text())
+    .then(msg => {
+        alert(msg);
+        if (msg.includes("verified")) {
+            overlay.style.display = "none";
+            signupBtn.disabled = false;
+        }
+    });
+};
+</script>
+
+</body>
+</html>

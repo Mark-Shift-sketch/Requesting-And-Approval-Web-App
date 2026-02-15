@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IT Administration Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='IT.css') }}">
+    <style>
+        /* Update .form-grid to automatically wrap items */
+.form-grid {
+    display: grid;
+    /* This creates columns that are at least 300px wide, fitting as many as possible per row */
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    padding: 20px 0;
+}
+
+.form-card {
+    background: #fff;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    /* Ensure cards stretch to fill height so they look uniform */
+    display: flex;
+    flex-direction: column; 
+}
+
+.form-card h3 {
+    margin-bottom: 15px;
+    color: #333;
+    border-bottom: 2px solid #f0f0f0;
+    padding-bottom: 10px;
+}
+
+/* Ensure the button stays at the bottom if card heights vary */
+.form-card form {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.btn-primary {
+    margin-top: auto; /* Pushes button to bottom of form */
+    background-color: #007bff;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background 0.3s;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+}
+    </style>
+</head>
+<body>
+
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <h2>IT Admin</h2>
+        </div>
+        <ul class="nav-links">
+            <li><a onclick="showTab('dashboard')" class="active" id="link-dashboard">Dashboard</a></li>
+            <li><a onclick="showTab('account')" id="link-account">Account Mgmt</a></li>
+            <li><a onclick="showTab('notification')" id="link-notification">Notifications</a></li>
+        </ul>
+        <div class="logout-section">
+            <a href="/logout" class="logout-btn" style="text-decoration:none; display:block; text-align:center;">Log Out</a>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                {% for category, message in messages %}
+                <div class="alert alert-{{ category }}" style="padding: 10px; margin-bottom: 15px; border-radius: 4px; background-color: #f0f0f0; border-left: 5px solid #333;">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        {% endwith %}
+
+        <div id="dashboard" class="tab-content active-content">
+            <header>
+                <h1 class="section-title">Dashboard Overview</h1>
+            </header>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Total Users</h3>
+                    <div class="number">{{ total_users }}</div>
+                </div>
+                <div class="stat-card new-users">
+                    <h3>New Users (Recent)</h3>
+                    <div class="number">{{ new_users_count }}</div>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <div class="table-header">
+                    <h3>Recent User List</h3>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>User ID</th>
+                            <th>Email</th>
+                            <th>Department</th>
+                            <th>Role</th>
+                            <th>Position</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr>
+                            <td>#IT-{{ user.user_id }}</td>
+                            <td>{{ user.email }}</td>
+                            <td>{{ user.dept_name }}</td>
+                            <td>{{ user.role_name }}</td>
+                            <td>
+                                <span class="badge">{{ user.position_name }}</span>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" style="text-align:center;">No users found in database.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div id="account" class="tab-content">
+    <header>
+        <h1 class="section-title">Account & System Management</h1>
+    </header>
+
+    <div class="form-grid">
+        <div class="form-card">
+            <h3>Create New Account</h3>
+            <br>
+            <form action="{{ url_for('create_user') }}" method="POST">
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" name="email" placeholder="user@company.com" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" name="password" placeholder="••••••••" required>
+                </div>
+                <div class="form-group">
+                    <label>Department</label>
+                    <select name="dept_id" required>
+                        <option value="" disabled selected>Select Department</option>
+                        {% for dept in departments %}
+                            <option value="{{ dept.dept_id }}">{{ dept.dept_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Role</label>
+                    <select name="role_id" required>
+                        <option value="" disabled selected>Select Role</option>
+                        {% for role in roles %}
+                            <option value="{{ role.role_id }}">{{ role.role_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Position</label>
+                    <select name="position_id" required>
+                        <option value="" disabled selected>Select Position</option>
+                        {% for pos in positions %}
+                            <option value="{{ pos.position_id }}">{{ pos.position_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="btn-primary">Create User</button>
+            </form>
+        </div>
+
+        <div class="form-card">
+            <h3>Add Department</h3>
+            <br>
+            <form action="{{ url_for('create_dept') }}" method="POST">
+                <div class="form-group">
+                    <label>Department Name</label>
+                    <input type="text" name="dept_name" placeholder="e.g., Marketing" required>
+                </div>
+                <button type="submit" class="btn-primary">Add Department</button>
+            </form>
+        </div>
+
+        <div class="form-card">
+            <h3>Add Role</h3>
+            <br>
+            <form action="{{ url_for('create_role') }}" method="POST">
+                <div class="form-group">
+                    <label>Role Name</label>
+                    <input type="text" name="role_name" placeholder="e.g., Guest, Auditor" required>
+                </div>
+                <button type="submit" class="btn-primary">Add Role</button>
+            </form>
+        </div>
+
+        <div class="form-card">
+            <h3>Add Position</h3>
+            <br>
+            <form action="{{ url_for('create_position') }}" method="POST">
+                <div class="form-group">
+                    <label>Position Name</label>
+                    <input type="text" name="position_name" placeholder="e.g., Senior Developer" required>
+                </div>
+                <button type="submit" class="btn-primary">Add Position</button>
+            </form>
+        </div>
+
+    </div>
+</div>
+
+        <div id="notification" class="tab-content">
+            <header>
+                <h1 class="section-title">Activity Logs & Notifications</h1>
+            </header>
+
+            <div class="notification-list">
+                {% for notif in notifications %}
+                <div class="notification-item">
+                    <div class="time-stamp">
+                        {{ notif.created_at }} 
+                    </div>
+                    <div class="notif-content">
+                        <h4>{{ notif.title }}</h4>
+                        <p>{{ notif.description }}</p>
+                    </div>
+                </div>
+                {% else %}
+                <div class="notification-item">
+                    <div class="notif-content">
+                        <p>No recent activity found.</p>
+                    </div>
+                </div>
+                {% endfor %}
+                </div>
+        </div>
+
+    </main>
+
+    <script>
+        function showTab(tabId) {
+            const contents = document.querySelectorAll('.tab-content');
+            contents.forEach(content => {
+                content.classList.remove('active-content');
+            });
+            const links = document.querySelectorAll('.nav-links a');
+            links.forEach(link => {
+                link.classList.remove('active');
+            });
+            document.getElementById(tabId).classList.add('active-content');
+            document.getElementById('link-' + tabId).classList.add('active');
+        }
+    </script>
+</body>
+</html>
